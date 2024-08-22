@@ -5,6 +5,7 @@ pub enum RispExp {
     Symbol(String),
     Number(f64),
     List(Vec<RispExp>),
+    Func(fn(&[RispExp]) -> Result<RispExp, RispErr>),
 }
 
 #[derive(Debug)]
@@ -15,5 +16,5 @@ pub enum RispErr {
 /// store defined var and built-in fn
 #[derive(Clone)]
 pub struct RispEnv {
-    data: HashMap<String, RispExp>,
+    pub data: HashMap<String, RispExp>,
 }

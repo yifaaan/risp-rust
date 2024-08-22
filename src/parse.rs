@@ -1,4 +1,4 @@
-use std::num::ParseFloatError;
+use std::collections::HashMap;
 
 use crate::types::*;
 
@@ -43,6 +43,44 @@ pub fn parse_atom(token: &str) -> RispExp {
         Ok(v) => RispExp::Number(v),
         Err(_) => RispExp::Symbol(token.to_string()),
     }
+}
+
+pub fn parse_single_float(x: &RispExp) -> Result<f64, RispErr> {
+    match x {
+        RispExp::Number(num) => Ok(*num),
+        _ => Err(RispErr::Reason("expected a number".to_string())),
+    }
+}
+
+pub fn parse_list_of_floats(args: &[RispExp]) -> Result<Vec<f64>, RispErr> {
+    args.iter().map(|x| parse_single_float(x)).collect()
+}
+
+/// Impl `+` `-`
+pub fn default_env() -> RispEnv {
+    let mut data = HashMap::new();
+    data.insert(
+        "+".to_string(),
+        RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
+            let sum = parse_list_of_floats(args)?
+                .iter()
+                .fold(0.0, |sum, a| sum + a);
+            Ok(RispExp::Number(sum))
+        }),
+    );
+
+    data.insert(
+        "-".to_string(),
+        RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
+            let floats = parse_list_of_floats(args)?;
+            let first = *floats
+                .first()
+                .ok_or(RispErr::Reason("expected at least one number".to_string()))?;
+            let sum_of_rest = floats[1..].iter().fold(0.0, |sum, a| sum + a);
+            Ok(RispExp::Number(first - sum_of_rest))
+        }),
+    );
+    RispEnv { data }
 }
 
 #[cfg(test)]
