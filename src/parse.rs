@@ -2,22 +2,29 @@ use std::collections::HashMap;
 
 use crate::types::*;
 
-pub fn tokenize(expr: String) -> Vec<String> {
-    expr.replace("(", " ( ")
+/// 从源代码提取token
+pub fn tokenize(source_code: String) -> Vec<String> {
+    source_code
+        .replace("(", " ( ")
         .replace(")", " ) ")
         .split_whitespace()
-        .map(|s| s.to_string())
+        .map(|token| token.to_owned())
         .collect()
 }
 
+/// 解析tokens, 返回值 (该步结果, 剩余tokens)
 pub fn parse(tokens: &[String]) -> Result<(RispExp, &[String]), RispErr> {
-    let (token, rest) = tokens
+    let (first_token, rest) = tokens
         .split_first()
         .ok_or(RispErr::Reason("could not get token".to_string()))?;
-    match token.as_str() {
+
+    match first_token.as_str() {
+        // "(" 表示开始
         "(" => read_seq(rest),
+        // 第一个token不会是")"
         ")" => Err(RispErr::Reason("unexpected `)`".to_string())),
-        _ => Ok((parse_atom(token), rest)),
+        // 是atom
+        _ => Ok((parse_atom(first_token), rest)),
     }
 }
 
@@ -25,6 +32,7 @@ pub fn read_seq(tokens: &[String]) -> Result<(RispExp, &[String]), RispErr> {
     let mut res = Vec::new();
     let mut xs = tokens;
     loop {
+        // next_token为空，则表示没有")"，错误
         let (next_token, rest) = xs
             .split_first()
             .ok_or(RispErr::Reason("could not find closing `)`".to_string()))?;

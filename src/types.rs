@@ -1,7 +1,7 @@
 use core::fmt;
 use std::collections::HashMap;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum RispExp {
     Symbol(String),
     Number(f64),
