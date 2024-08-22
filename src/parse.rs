@@ -39,6 +39,7 @@ pub fn read_seq(tokens: &[String]) -> Result<(RispExp, &[String]), RispErr> {
         if next_token == ")" {
             return Ok((RispExp::List(res), rest));
         }
+        // 没到终止")", 继续解析
         let (exp, new_xs) = parse(xs)?;
         res.push(exp);
         xs = new_xs;
@@ -46,10 +47,16 @@ pub fn read_seq(tokens: &[String]) -> Result<(RispExp, &[String]), RispErr> {
 }
 
 pub fn parse_atom(token: &str) -> RispExp {
-    let potential_float = token.parse::<f64>();
-    match potential_float {
-        Ok(v) => RispExp::Number(v),
-        Err(_) => RispExp::Symbol(token.to_string()),
+    match token {
+        "true" => RispExp::Bool(true),
+        "false" => RispExp::Bool(false),
+        _ => {
+            let potential_float = token.parse::<f64>();
+            match potential_float {
+                Ok(v) => RispExp::Number(v),
+                Err(_) => RispExp::Symbol(token.to_string()),
+            }
+        }
     }
 }
 

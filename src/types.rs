@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 #[derive(Clone)]
 pub enum RispExp {
+    Bool(bool),
     Symbol(String),
     Number(f64),
     List(Vec<RispExp>),
@@ -12,6 +13,7 @@ pub enum RispExp {
 impl fmt::Display for RispExp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
+            Self::Bool(b) => b.to_string(),
             Self::Symbol(s) => s.clone(),
             Self::Number(n) => n.to_string(),
             Self::List(list) => {
