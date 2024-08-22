@@ -1,18 +1,19 @@
 use std::collections::HashMap;
 
-#[derive(Clone)]
-enum RispExp {
+#[derive(Clone, Debug)]
+pub enum RispExp {
     Symbol(String),
     Number(f64),
     List(Vec<RispExp>),
 }
 
 #[derive(Debug)]
-enum RispErr {
+pub enum RispErr {
     Reason(String),
 }
 
+/// store defined var and built-in fn
 #[derive(Clone)]
-struct RispEnv {
+pub struct RispEnv {
     data: HashMap<String, RispExp>,
 }
