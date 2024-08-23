@@ -19,7 +19,7 @@ pub fn parse(tokens: &[String]) -> Result<(RispExp, &[String]), RispErr> {
         .ok_or(RispErr::Reason("could not get token".to_string()))?;
 
     match first_token.as_str() {
-        // "(" 表示开始
+        // "(" 表示开始,接着处理字符序列
         "(" => read_seq(rest),
         // 第一个token不会是")"
         ")" => Err(RispErr::Reason("unexpected `)`".to_string())),
@@ -71,6 +71,26 @@ pub fn parse_list_of_floats(args: &[RispExp]) -> Result<Vec<f64>, RispErr> {
     args.iter().map(|x| parse_single_float(x)).collect()
 }
 
+macro_rules! ensure_tonicity {
+    ($check_fn:expr) => {{
+        |args: &[RispExp]| -> Result<RispExp, RispErr> {
+            let floats = parse_list_of_floats(args)?;
+            let first = floats
+                .first()
+                .ok_or(RispErr::Reason("expected at least one number".to_string()))?;
+            let rest = &floats[1..];
+
+            fn f(prev: &f64, xs: &[f64]) -> bool {
+                match xs.first() {
+                    Some(x) => $check_fn(prev, x) && f(x, &xs[1..]),
+                    None => true,
+                }
+            }
+            Ok(RispExp::Bool(f(first, rest)))
+        }
+    }};
+}
+
 /// Impl `+` `-`
 pub fn default_env() -> RispEnv {
     let mut data = HashMap::new();
@@ -94,6 +114,27 @@ pub fn default_env() -> RispEnv {
             let sum_of_rest = floats[1..].iter().fold(0.0, |sum, a| sum + a);
             Ok(RispExp::Number(first - sum_of_rest))
         }),
+    );
+
+    data.insert(
+        "=".to_string(),
+        RispExp::Func(ensure_tonicity!(|a, b| a == b)),
+    );
+    data.insert(
+        ">".to_string(),
+        RispExp::Func(ensure_tonicity!(|a, b| a > b)),
+    );
+    data.insert(
+        ">=".to_string(),
+        RispExp::Func(ensure_tonicity!(|a, b| a >= b)),
+    );
+    data.insert(
+        "<".to_string(),
+        RispExp::Func(ensure_tonicity!(|a, b| a < b)),
+    );
+    data.insert(
+        "<=".to_string(),
+        RispExp::Func(ensure_tonicity!(|a, b| a <= b)),
     );
     RispEnv { data }
 }
