@@ -21,6 +21,7 @@ impl std::fmt::Display for TokenError {
     }
 }
 
+/// Convert program code text to tokens
 pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     let program = program.replace("(", " ( ").replace(")", " ) ");
     let words = program.split_whitespace();
