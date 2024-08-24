@@ -16,7 +16,7 @@ impl std::fmt::Display for ParseError {
 }
 
 /// Object model makes up the elements of the list
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Object {
     Void,
     Integer(i64),
