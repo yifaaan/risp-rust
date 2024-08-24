@@ -44,3 +44,68 @@ fn eval_list(list: &[Object], env: Rc<RefCell<Env>>) -> Result<Object, String> {
         }
     }
 }
+
+fn eval_if(list: &[Object], env: Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 4 {
+        return Err(format!("Invalid number of arguments for if statement"));
+    }
+    let cond_obj = eval_obj(&list[1], env.clone())?;
+    let cond = match cond_obj {
+        Object::Bool(b) => b,
+        _ => return Err(format!("Condition must be a boolean")),
+    };
+
+    if cond {
+        eval_obj(&list[2], env.clone())
+    } else {
+        eval_obj(&list[3], env.clone())
+    }
+}
+
+fn eval_define(list: &[Object], env: Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for define"));
+    }
+    let sym = match &list[1] {
+        Object::Symbol(s) => s.clone(),
+        _ => return Err(format!("Invalid define")),
+    };
+    let val = eval_obj(&list[2], env.clone())?;
+    env.borrow_mut().set(&sym, val);
+    Ok(Object::Void)
+}
+
+
+fn eval_binary_op(list: &[Object], env: Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for infix operator");)
+    }
+
+    let operator = list[0].clone();
+    let left = eval_obj(&list[1], env.clone())?;
+    let right = eval_obj(&list[2], env.clone())?;
+
+    let left_val = match left {
+        Object::Integer(n) => n,
+        _ => return Err(format!("Left operand must be an integer {:?}", left)),
+    };
+    let right_val = match right {
+        Object::Integer(n) => n,
+        _ => return Err(format!("right operand must be an integer {:?}", right)),
+    };
+
+    match operator {
+        Object::Symbol(s) => match s.as_str() {
+            "+" => Ok(Object::Integer(left_val + right_val)),
+            "-" => Ok(Object::Integer(left_val - right_val)),
+            "*" => Ok(Object::Integer(left_val * right_val)),
+            "/" => Ok(Object::Integer(left_val / right_val)),
+            "<" => Ok(Object::Bool(left_val < right_val)),
+            ">" => Ok(Object::Bool(left_val > right_val)),
+            "=" => Ok(Object::Bool(left_val == right_val)),
+            "!=" => Ok(Object::Bool(left_val != right_val)),
+            _ => Err(format!("Invalid infix operator: {}", s)),
+        },
+        _ => Err(format!("Operator must be a symbol")),
+    }
+}
